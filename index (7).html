@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YTGrab – Free YouTube Downloader</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red: #FF2D55;
+            --red-dark: #D91A40;
+            --red-glow: rgba(255,45,85,0.18);
+            --bg: #0D0D0D;
+            --surface: #161616;
+            --surface2: #1E1E1E;
+            --border: #2A2A2A;
+            --text: #F0F0F0;
+            --muted: #888;
+            --green: #30D158;
+            --green-dark: #25A244;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── NAV ── */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: rgba(13,13,13,0.92);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+        }
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+        }
+        .logo span { color: var(--red); }
+        .nav-links { display: flex; gap: 28px; }
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--text); }
+
+        /* ── HERO ── */
+        .hero {
+            text-align: center;
+            padding: 100px 20px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 400px;
+            background: radial-gradient(ellipse, var(--red-glow) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .hero-badge {
+            display: inline-block;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 99px;
+            padding: 6px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+        .hero h1 {
+            font-size: clamp(2.4rem, 6vw, 4rem);
+            font-weight: 900;
+            line-height: 1.08;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+        }
+        .hero h1 em {
+            font-style: normal;
+            color: var(--red);
+        }
+        .hero p {
+            color: var(--muted);
+            font-size: 1.1rem;
+            max-width: 480px;
+            margin: 0 auto 48px;
+            line-height: 1.6;
+        }
+
+        /* ── SEARCH BOX ── */
+        .search-wrap {
+            max-width: 680px;
+            margin: 0 auto 20px;
+            display: flex;
+            gap: 0;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--surface);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-wrap:focus-within {
+            border-color: var(--red);
+            box-shadow: 0 0 0 4px var(--red-glow);
+        }
+        .search-wrap input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 18px 20px;
+            font-size: 15px;
+            color: var(--text);
+            outline: none;
+            font-family: inherit;
+        }
+        .search-wrap input::placeholder { color: var(--muted); }
+        .search-wrap button {
+            background: var(--red);
+            border: none;
+            padding: 0 28px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .search-wrap button:hover { background: var(--red-dark); }
+        .search-wrap button:disabled { background: #5a1020; cursor: not-allowed; color: #888; }
+
+        .search-hint {
+            font-size: 12px;
+            color: var(--muted);
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        /* ── FEATURES STRIP ── */
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding: 60px 20px;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .feature {
+            text-align: center;
+            max-width: 160px;
+        }
+        .feature-icon {
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .feature h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .feature p {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        /* ── RESULT CARD ── */
+        .result-section {
+            max-width: 780px;
+            margin: 60px auto;
+            padding: 0 20px;
+            display: none;
+        }
+        .result-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .result-top {
+            display: flex;
+            gap: 0;
+        }
+        .thumb-area {
+            flex: 0 0 280px;
+            padding: 20px;
+            border-right: 1px solid var(--border);
+        }
+        .thumb-area img {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            background: var(--surface2);
+        }
+        .video-title {
+            font-size: 14px;
+            line-height: 1.5;
+            font-weight: 500;
+            color: var(--text);
+        }
+        .video-meta {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .download-area { flex: 1; }
+
+        /* ── TABS ── */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 16px;
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .tab-btn.active {
+            color: var(--red);
+            border-bottom: 2px solid var(--red);
+            background: rgba(255,45,85,0.05);
+        }
+
+        /* ── FORMAT ROWS ── */
+        .format-list { padding: 16px 20px; }
+        .format-tab { display: none; }
+        .format-tab.active { display: block; }
+
+        .format-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .format-row:last-child { border-bottom: none; }
+        .format-info {}
+        .format-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .format-detail {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        .btn-dl {
+            background: var(--green);
+            color: #000;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .btn-dl:hover { background: var(--green-dark); color: #fff; }
+        .btn-dl:disabled { background: #1a3d27; color: #555; cursor: not-allowed; }
+        .btn-dl.loading { background: #f39c12; color: #000; }
+        .btn-dl.done { background: var(--green); color: #000; }
+
+        /* ── HOW IT WORKS ── */
+        .how-section {
+            max-width: 800px;
+            margin: 80px auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--red);
+            margin-bottom: 16px;
+        }
+        .how-section h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 48px;
+        }
+        .steps {
+            display: flex;
+            gap: 0;
+            position: relative;
+        }
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 28px;
+            left: 16.5%;
+            right: 16.5%;
+            height: 1px;
+            background: var(--border);
+        }
+        .step { flex: 1; }
+        .step-num {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 900;
+            margin: 0 auto 20px;
+            position: relative;
+            z-index: 1;
+        }
+        .step-num.active-step {
+            background: var(--red);
+            border-color: var(--red);
+            color: #fff;
+        }
+        .step h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+        .step p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+        /* ── FAQ ── */
+        .faq-section {
+            max-width: 620px;
+            margin: 0 auto 100px;
+            padding: 0 20px;
+        }
+        .faq-section h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+        }
+        .faq-item summary {
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .faq-item summary::after {
+            content: '+';
+            color: var(--red);
+            font-size: 20px;
+            font-weight: 400;
+            flex-shrink: 0;
+        }
+        details[open] summary::after { content: '−'; }
+        .faq-item p {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+            margin-top: 12px;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            text-align: center;
+            padding: 32px 20px;
+            border-top: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* ── SPINNER ── */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 999;
+            transition: transform 0.3s ease;
+            white-space: nowrap;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.error { border-color: var(--red); color: var(--red); }
+        .toast.success { border-color: var(--green); color: var(--green); }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 640px) {
+            nav { padding: 16px 20px; }
+            .nav-links { display: none; }
+            .hero { padding: 70px 20px 40px; }
+            .result-top { flex-direction: column; }
+            .thumb-area { flex: none; border-right: none; border-bottom: 1px solid var(--border); }
+            .steps { flex-direction: column; gap: 24px; }
+            .steps::before { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <div class="logo">YT<span>Grab</span></div>
+    <div class="nav-links">
+        <a href="#how">How it works</a>
+        <a href="#faq">FAQ</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-badge">Free · No signup · Unlimited</div>
+    <h1>Download YouTube<br>Videos <em>Instantly</em></h1>
+    <p>Paste any YouTube link and grab video in HD or extract MP3 audio — no ads, no limits.</p>
+
+    <div class="search-wrap">
+        <input type="text" id="video-url" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+        <button id="start-btn" onclick="fetchDetails()">Fetch →</button>
+    </div>
+    <p class="search-hint">Supports youtube.com and youtu.be links</p>
+</section>
+
+<!-- FEATURES STRIP -->
+<div class="features">
+    <div class="feature">
+        <span class="feature-icon">⚡</span>
+        <h4>Fast Extraction</h4>
+        <p>Direct CDN links, no re-encoding wait</p>
+    </div>
+    <div class="feature">
+        <span class="feature-icon">🎵</span>
+        <h4>MP3 Audio</h4>
+        <p>High quality audio extraction</p>
+    </div>
+    <div class="feature">
+        <span class="feature-icon">📹</span>
+        <h4>Up to 1080p</h4>
+        <p>Full HD video downloads</p>
+    </div>
+    <div class="feature">
+        <span class="feature-icon">🔒</span>
+        <h4>No Account</h4>
+        <p>Zero signup, zero tracking</p>
+    </div>
+</div>
+
+<!-- RESULT SECTION -->
+<div class="result-section" id="result-section">
+    <div class="result-card">
+        <div class="result-top">
+            <div class="thumb-area">
+                <img id="thumb-img" src="" alt="Thumbnail">
+                <div class="video-title" id="video-title">—</div>
+            </div>
+            <div class="download-area">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('audio')" id="btn-audio">🎵 Audio</button>
+                    <button class="tab-btn" onclick="switchTab('video')" id="btn-video">📹 Video</button>
+                </div>
+                <div class="format-list">
+                    <div class="format-tab active" id="tab-audio">
+                        <div class="format-row">
+                            <div class="format-info">
+                                <div class="format-name">MP3</div>
+                                <div class="format-detail">High quality audio · .mp3</div>
+                            </div>
+                            <button class="btn-dl" onclick="requestDownload('mp3', this)">⬇ Download</button>
+                        </div>
+                        <div class="format-row">
+                            <div class="format-info">
+                                <div class="format-name">M4A</div>
+                                <div class="format-detail">Best audio quality · .m4a</div>
+                            </div>
+                            <button class="btn-dl" onclick="requestDownload('m4a', this)">⬇ Download</button>
+                        </div>
+                    </div>
+                    <div class="format-tab" id="tab-video">
+                        <div class="format-row">
+                            <div class="format-info">
+                                <div class="format-name">1080p</div>
+                                <div class="format-detail">Full HD · .mp4</div>
+                            </div>
+                            <button class="btn-dl" onclick="requestDownload('1080p', this)">⬇ Download</button>
+                        </div>
+                        <div class="format-row">
+                            <div class="format-info">
+                                <div class="format-name">720p</div>
+                                <div class="format-detail">HD · .mp4</div>
+                            </div>
+                            <button class="btn-dl" onclick="requestDownload('720p', this)">⬇ Download</button>
+                        </div>
+                        <div class="format-row">
+                            <div class="format-info">
+                                <div class="format-name">360p</div>
+                                <div class="format-detail">Standard · .mp4</div>
+                            </div>
+                            <button class="btn-dl" onclick="requestDownload('360p', this)">⬇ Download</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+    <div class="section-label">Simple Process</div>
+    <h2>Three steps, done.</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-num active-step">1</div>
+            <h4>Paste the link</h4>
+            <p>Copy any YouTube URL and paste it in the search box above.</p>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <h4>Choose format</h4>
+            <p>Pick video quality or audio-only from the options shown.</p>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <h4>Download</h4>
+            <p>Hit download and save the file directly to your device.</p>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section" id="faq">
+    <h2>Questions</h2>
+
+    <details class="faq-item">
+        <summary>Is this free to use?</summary>
+        <p>Yes, completely free. No account, no subscription, no hidden fees.</p>
+    </details>
+    <details class="faq-item">
+        <summary>Why doesn't 1080p always work?</summary>
+        <p>YouTube serves 1080p as two separate streams (video + audio). Our backend merges them server-side using ffmpeg. If it fails, try 720p which is always a single merged stream.</p>
+    </details>
+    <details class="faq-item">
+        <summary>How long are download links valid?</summary>
+        <p>YouTube's CDN links expire after a few hours. If a link stops working, just fetch the video again.</p>
+    </details>
+    <details class="faq-item">
+        <summary>Can I download private or age-restricted videos?</summary>
+        <p>No. Only public videos are supported.</p>
+    </details>
+</section>
+
+<footer>
+    © 2025 YTGrab · For personal use only · Respect copyright laws
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+    // ── CONFIG ──
+    // Yahan apna Railway backend URL dalna deploy ke baad
+    const BACKEND_URL = 'http://127.0.0.1:5000';
+
+    // ── TOAST ──
+    function showToast(msg, type = '') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast show ' + type;
+        setTimeout(() => { t.className = 'toast'; }, 3500);
+    }
+
+    // ── TAB SWITCH ──
+    function switchTab(name) {
+        document.querySelectorAll('.format-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        document.getElementById('btn-' + name).classList.add('active');
+    }
+
+    // ── FETCH VIDEO DETAILS ──
+    async function fetchDetails() {
+        const url = document.getElementById('video-url').value.trim();
+        const btn = document.getElementById('start-btn');
+
+        if (!url) { showToast('Please paste a YouTube link first', 'error'); return; }
+        if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+            showToast('Only YouTube links are supported', 'error'); return;
+        }
+
+        btn.innerHTML = '<span class="spinner"></span>Fetching...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/get-info`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                document.getElementById('thumb-img').src = data.thumbnail;
+                document.getElementById('video-title').textContent = data.title;
+                const section = document.getElementById('result-section');
+                section.style.display = 'block';
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                showToast('Error: ' + data.error, 'error');
+            }
+        } catch {
+            showToast('Cannot reach server. Is app.py running?', 'error');
+        }
+
+        btn.textContent = 'Fetch →';
+        btn.disabled = false;
+    }
+
+    // ── DOWNLOAD ──
+    async function requestDownload(quality, btnEl) {
+        const url = document.getElementById('video-url').value.trim();
+        const orig = btnEl.textContent;
+
+        btnEl.innerHTML = '<span class="spinner"></span>Getting link...';
+        btnEl.classList.add('loading');
+        btnEl.disabled = true;
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/get-download`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, quality })
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.direct_link) {
+                window.open(data.direct_link, '_blank');
+                btnEl.textContent = '✅ Done';
+                btnEl.classList.remove('loading');
+                btnEl.classList.add('done');
+                showToast('Download started!', 'success');
+                setTimeout(() => {
+                    btnEl.textContent = orig;
+                    btnEl.classList.remove('done');
+                    btnEl.disabled = false;
+                }, 4000);
+            } else {
+                throw new Error(data.error || 'Unknown error');
+            }
+        } catch (err) {
+            showToast('Failed: ' + err.message, 'error');
+            btnEl.textContent = orig;
+            btnEl.classList.remove('loading');
+            btnEl.disabled = false;
+        }
+    }
+
+    // Enter key support
+    document.getElementById('video-url').addEventListener('keydown', e => {
+        if (e.key === 'Enter') fetchDetails();
+    });
+</script>
+</body>
+</html>
